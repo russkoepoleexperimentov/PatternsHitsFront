@@ -4,7 +4,7 @@ import { Button } from '@/ui/shared/Button';
 import { type Column } from '@/ui/shared/DataTable';
 import type { Account } from '@/domain/models/account';
 import type { User } from '@/domain/models/user';
-import { Trash2, BookOpen, UserCircle } from 'lucide-react';
+import { Trash2, BookOpen, UserCircle, Eye, EyeOff } from 'lucide-react';
 import dayjs from 'dayjs';
 
 export const getAccountStatus = (record: Account) => {
@@ -17,7 +17,9 @@ export const getAccountStatus = (record: Account) => {
 export const getAccountColumns = (
   usersMap: Record<string, User>,
   onOpenDrawer: (account: Account) => void,
-  onCloseAccount: (accountId: string) => void
+  onCloseAccount: (accountId: string) => void,
+  onToggleHidden: (accountId: string) => void,
+  hiddenAccounts: string[]
 ): Column<Account>[] => [
   {
     key: 'id',
@@ -66,6 +68,17 @@ export const getAccountColumns = (
           }}
         >
           История
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={hiddenAccounts.includes(r.id) ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleHidden(r.id);
+          }}
+        >
+          {hiddenAccounts.includes(r.id) ? 'Показать' : 'Скрыть'}
         </Button>
         {!r.closedAt && !r.isDeleted && (
           <Button

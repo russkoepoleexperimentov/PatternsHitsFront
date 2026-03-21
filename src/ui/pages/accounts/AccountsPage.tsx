@@ -4,8 +4,10 @@ import { ErrorBoundary } from '@/ui/shared/ErrorBoundary';
 import { ErrorPage } from '@/ui/pages/error/ErrorPage';
 import { accountUseCases } from '@/domain/usecases/accountUseCases';
 import { userUseCases } from '@/domain/usecases/userUseCases';
+import { optionsUseCases } from '@/domain/usecases/optionsUseCases';
 import type { Account, Transaction } from '@/domain/models/account';
 import type { User } from '@/domain/models/user';
+import type { OptionsDto } from '@/domain/models/options';
 import { PageHeader } from '@/ui/shared/PageHeader';
 import { DataTable, type Column } from '@/ui/shared/DataTable';
 import { PageSpinner } from '@/ui/shared/Spinner';
@@ -25,6 +27,8 @@ export const AccountsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
   const [masterAccount, setMasterAccount] = useState<Account | null>(null);
+  const [options, setOptions] = useState<OptionsDto>({ webTheme: null, mobileTheme: null, hiddenAccounts: null });
+  const [showHidden, setShowHidden] = useState(false);
 
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -55,12 +59,14 @@ export const AccountsPage: React.FC = () => {
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      const [data, master] = await Promise.all([
+      const [data, master, opts] = await Promise.all([
         accountUseCases.getAllAccounts(),
         accountUseCases.getMasterAccount(),
+        optionsUseCases.getOptions(),
       ]);
       setAccounts(data);
       setMasterAccount(master);
+      setOptions(opts);
 
       const userIds = data.map((a) => a.userId);
       const map = await userUseCases.loadUsersMap(userIds);
@@ -118,21 +124,58 @@ export const AccountsPage: React.FC = () => {
     }
   };
 
+  const handleToggleHidden = async (accountId: string) => {
+    try {
+      const isHidden = options.hiddenAccounts?.includes(accountId);
+      if (isHidden) {
+        await optionsUseCases.removeHiddenAccount(accountId);
+        toast.success('Счёт показан');
+      } else {
+        await optionsUseCases.addHiddenAccount(accountId);
+        toast.success('Счёт скрыт');
+      }
+      // Перезагрузить options
+      const updatedOptions = await optionsUseCases.getOptions();
+      setOptions(updatedOptions);
+    } catch (error) {
+      toast.error('Ошибка при изменении видимости счёта');
+    }
+  };
+
   const invalidate = () => {
     fetchAccounts();
     if (selectedAccount?.id) loadTransactions(selectedAccount.id);
   };
 
+  const filteredAccounts = accounts.filter(account => 
+    showHidden || !options.hiddenAccounts?.includes(account.id)
+  );
+
   const columns: Column<Account>[] = getAccountColumns(
     usersMap,
     handleOpenDrawer,
-    (id) => setConfirmClose(id)
+    (id) => setConfirmClose(id),
+    handleToggleHidden,
+    options.hiddenAccounts || []
   );
 
   return (
     <ErrorBoundary fallback={<ErrorPage title="Ошибка страницы Счета" message="Произошла неожиданная ошибка при загрузке страницы счетов." />}>
       <div>
         <PageHeader title="Счета клиентов" subtitle="Управление счетами и транзакциями" />
+
+        <div className="mt-4 mb-4 flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="showHidden"
+            checked={showHidden}
+            onChange={(e) => setShowHidden(e.target.checked)}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          />
+          <label htmlFor="showHidden" className="text-sm text-gray-700">
+            Показать скрытые счета ({options.hiddenAccounts?.length || 0})
+          </label>
+        </div>
 
       <div className="mt-4 mb-6 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
         <h2 className="text-sm font-semibold text-gray-700">Мастер-счёт</h2>
@@ -149,7 +192,7 @@ export const AccountsPage: React.FC = () => {
       {loading ? (
         <PageSpinner />
       ) : (
-        <DataTable data={accounts} columns={columns} rowKey="id" />
+        <DataTable data={filteredAccounts} columns={columns} rowKey="id" />
       )}
 
       {/* Transaction Drawer */}

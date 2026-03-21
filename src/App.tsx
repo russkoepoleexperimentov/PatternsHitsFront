@@ -18,6 +18,7 @@ import { UsersPage } from '@/ui/pages/users/UsersPage';
 import { AccountsPage } from '@/ui/pages/accounts/AccountsPage';
 import { TariffsPage } from '@/ui/pages/tariffs/TariffsPage';
 import { CreditsPage } from '@/ui/pages/credits/CreditsPage';
+import { OptionsPage } from '@/ui/pages/options/OptionsPage';
 import { NotFoundPage } from '@/ui/pages/notFound/NotFoundPage';
 import { ForbiddenPage } from '@/ui/pages/forbidden/ForbiddenPage';
 import { LogoutCallbackPage } from '@/ui/pages/login/LogoutCallbackPage';
@@ -34,6 +35,7 @@ function AppRoutes() {
       <Route element={<ErrorBoundary fallback={<ErrorPage />}><Outlet /></ErrorBoundary>}>
         <Route path="/" element={<PrivateRoute><HomePage /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        <Route path="/options" element={<PrivateRoute><OptionsPage /></PrivateRoute>} />
         <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
         <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
         <Route path="/tariffs" element={<PrivateRoute><TariffsPage /></PrivateRoute>} />

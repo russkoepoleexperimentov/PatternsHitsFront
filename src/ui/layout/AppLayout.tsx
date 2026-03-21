@@ -10,6 +10,7 @@ import {
   UserCircle,
   LogOut,
   Building2,
+  Settings,
 } from 'lucide-react';
 
 interface NavItem {
@@ -35,6 +36,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     { key: '/accounts', label: 'Счета', icon: <Wallet className="h-4 w-4" />, to: '/accounts' },
     { key: '/tariffs', label: 'Тарифы', icon: <CreditCard className="h-4 w-4" />, to: '/tariffs' },
     { key: '/credits', label: 'Кредиты', icon: <FileText className="h-4 w-4" />, to: '/credits' },
+    { key: '/options', label: 'Настройки', icon: <Settings className="h-4 w-4" />, to: '/options' },
   ];
 
   if (user) {
