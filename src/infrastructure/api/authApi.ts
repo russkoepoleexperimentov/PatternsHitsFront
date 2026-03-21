@@ -11,6 +11,9 @@ export const authApiService = {
   searchUsers: (query: string = ''): Promise<User[]> =>
     authHttpClient.get<User[]>('/api/users/search', { query }),
 
+  getLoggedInUser: (): Promise<User> =>
+    authHttpClient.get<User>('/api/users'),
+
   getUserById: (id: string): Promise<User> =>
     authHttpClient.get<User>(`/api/users/${id}`),
 
