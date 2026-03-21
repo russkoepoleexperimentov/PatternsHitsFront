@@ -1,5 +1,5 @@
 export interface OptionsDto {
-  webTheme: string | null;
+  webTheme: 'Light' | 'Dark' | null;
   mobileTheme: string | null;
   hiddenAccounts: string[] | null;
 }
