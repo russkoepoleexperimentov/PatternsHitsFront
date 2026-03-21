@@ -14,6 +14,8 @@ export const useTransactionsWebSocket = (
     const onMessageRef = useRef(onMessage);
     const onErrorRef = useRef(onError);
 
+    const wsRef = useRef<WebSocket | null>(null);
+
     useEffect(() => {
         onOpenRef.current = onOpen;
         onMessageRef.current = onMessage;
@@ -22,6 +24,8 @@ export const useTransactionsWebSocket = (
 
     useEffect(() => {
         const ws = new WebSocket(`${url}?token=${user?.access_token}`);
+
+        wsRef.current = ws;
 
         ws.onopen = () => {
             console.log('WebSocket connected');
@@ -49,4 +53,15 @@ export const useTransactionsWebSocket = (
             }
         };
     }, [url, user?.access_token]);
+
+    return {
+        get: (accountId: any, fromDate: any, toDate: any) => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                const request = `get ${accountId}`;
+                wsRef.current.send(request);
+            } else {
+                console.warn('WebSocket is not open. Unable to send get request:', { accountId, fromDate, toDate });
+            }
+        }
+    }
 };

@@ -4,6 +4,8 @@
  * Отвечает только за: формирование запросов, отправку, обработку ответов и ошибок транспортного уровня.
  */
 
+import { authService } from '../auth/authService';
+
 export interface HttpRequestConfig {
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   headers?: Record<string, string>;
@@ -109,6 +111,9 @@ export class HttpClient {
     }
 
     if (!response.ok) {
+      if (response.status === 401) {
+        authService.logout();
+      }
       throw new HttpError(response.status, response.statusText, data);
     }
 

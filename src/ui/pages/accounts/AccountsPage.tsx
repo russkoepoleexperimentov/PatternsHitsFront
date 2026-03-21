@@ -35,21 +35,14 @@ export const AccountsPage: React.FC = () => {
   const [closeLoading, setCloseLoading] = useState(false);
 
   const handleWebSocketTransaction = useCallback((transaction: Transaction) => {
-    console.log('Получена транзакция через WebSocket:', transaction, selectedAccount);
     if (!selectedAccount) return;
     if (transaction.sourceId === selectedAccount.id || 
       transaction.targetId === selectedAccount.id) {
       setTransactions((prev) => [transaction, ...prev]);
-      toast.info(`Новая транзакция: ${transaction.resolutionMessage || 'Без описания'} (${transaction.amount} ₽)`);
     }
   }, [selectedAccount, toast]);
 
-  useEffect(() => {
-      toast.info(`Выбрана новая учётная запись: ${selectedAccount?.id.substring(0, 8) ?? 'нет'}…`);
-    }, [selectedAccount]);
-
-  useTransactionsWebSocket(() => {
-    toast.info('WebSocket подключён');
+  const { get: getTransactions } = useTransactionsWebSocket(() => {
   }, handleWebSocketTransaction, (error) => {
     toast.error('Ошибка WebSocket: ' + error);
   });
@@ -86,8 +79,10 @@ export const AccountsPage: React.FC = () => {
   const loadTransactions = async (accountId: string) => {
     setTxLoading(true);
     try {
-      const data = await accountUseCases.getTransactions(accountId);
-      setTransactions(data);
+      //const data = await accountUseCases.getTransactions(accountId);
+      //setTransactions(data);
+      setTransactions([]); // Очистка перед загрузкой новых данных
+      getTransactions(accountId, null, null); // Запрос на получение транзакций через WebSocket 
     } catch {
       toast.error('Не удалось загрузить транзакции');
       setTransactions([]);
