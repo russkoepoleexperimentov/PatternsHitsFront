@@ -4,7 +4,7 @@
  */
 
 import { creditApiService } from '@/infrastructure/api';
-import type { Credit, ApproveCreditRequest, RejectCreditRequest } from '@/domain/models/credit';
+import type { Credit, ApproveCreditRequest, RejectCreditRequest, CreditRating } from '@/domain/models/credit';
 
 export const creditUseCases = {
   getAllCredits: async (userId?: string): Promise<Credit[]> => {
@@ -13,6 +13,10 @@ export const creditUseCases = {
 
   getCreditDetails: async (id: string): Promise<Credit> => {
     return creditApiService.getCreditById(id);
+  },
+
+  getUserRating: async (userId: string): Promise<CreditRating> => {
+    return creditApiService.getCreditRating(userId);
   },
 
   approveCredit: async (id: string, data: ApproveCreditRequest): Promise<Credit> => {

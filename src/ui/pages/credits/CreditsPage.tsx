@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/ui/shared/Toast';
 import { creditUseCases } from '@/domain/usecases/creditUseCases';
 import { userUseCases } from '@/domain/usecases/userUseCases';
-import type { Credit, ApproveCreditRequest, RejectCreditRequest } from '@/domain/models/credit';
+import type { Credit, ApproveCreditRequest, RejectCreditRequest, CreditRating } from '@/domain/models/credit';
 import type { User } from '@/domain/models/user';
 import { PageHeader } from '@/ui/shared/PageHeader';
 import { DataTable, type Column } from '@/ui/shared/DataTable';
@@ -33,6 +33,9 @@ export const CreditsPage: React.FC = () => {
 
   const [selectedCredit, setSelectedCredit] = useState<Credit | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [rating, setRating] = useState<CreditRating | null>(null);
+  const [loadingRating, setLoadingRating] = useState(false);
 
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -65,6 +68,15 @@ export const CreditsPage: React.FC = () => {
   const handleView = (credit: Credit) => {
     setSelectedCredit(credit);
     setDrawerOpen(true);
+
+    setLoadingRating(true);
+    creditUseCases.getUserRating(credit.userId)
+      .then(setRating)
+      .catch(() => { 
+        setRating(null);
+        toast.error('Не удалось загрузить кредитный рейтинг пользователя');
+      })
+      .finally(() => setLoadingRating(false));
   };
 
   const handleApprove = async (e: React.FormEvent) => {
@@ -199,6 +211,18 @@ export const CreditsPage: React.FC = () => {
             <DetailRow label="Клиент">
               {usersMap[selectedCredit.userId]?.email || selectedCredit.userId}
             </DetailRow>
+
+            <DetailRow label="Кредитный рейтинг">
+              {loadingRating ? (
+                <span className="text-gray-400">Загрузка...</span>
+              ) : rating ? (
+                <span className="font-bold">{rating.rating} ед.</span>
+              ) : (
+                <span className="text-gray-400">Нет данных</span>
+              )}
+            </DetailRow>
+
+
             <DetailRow label="Сумма">{selectedCredit.amount} ₽</DetailRow>
             <DetailRow label="Остаток долга">{selectedCredit.remainingDebt} ₽</DetailRow>
             <DetailRow label="Срок">{selectedCredit.termDays} дн.</DetailRow>

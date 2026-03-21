@@ -11,6 +11,11 @@ export interface Credit {
   rejectionReason?: string;
 }
 
+export interface CreditRating {
+  userId: string;
+  rating: number;
+}
+
 export type CreditStatus = 'Pending' | 'Approved' | 'Rejected' | 'Closed';
 
 export interface ApproveCreditRequest {

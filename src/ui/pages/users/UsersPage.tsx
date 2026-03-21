@@ -12,12 +12,16 @@ import { Badge } from '@/ui/shared/Badge';
 import { Button } from '@/ui/shared/Button';
 import { Input } from '@/ui/shared/FormField';
 import { Search, Eye, Lock, Unlock, ShieldCheck, ShieldOff } from 'lucide-react';
+import { CreditRating } from '@/domain/models/credit';
+import { creditUseCases } from '@/domain/usecases/creditUseCases';
 
 export const UsersPage: React.FC = () => {
   const { user: authUser } = useAuth();
   const toast = useToast();
 
   const [users, setUsers] = useState<User[]>([]);
+  const [rating, setRating] = useState<CreditRating | null>(null);
+  const [loadingRating, setLoadingRating] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -51,9 +55,18 @@ export const UsersPage: React.FC = () => {
     debounceRef.current = setTimeout(() => fetchUsers(value), 500);
   };
 
-  const showUserDetails = (user: User) => {
+  const showUserDetails = async (user: User) => {
     setSelectedUser(user);
     setDrawerOpen(true);
+    
+    setLoadingRating(true);
+    await creditUseCases.getUserRating(user.id)
+      .then(setRating)
+      .catch(() => {
+        setRating(null); 
+        toast.error('Не удалось загрузить кредитный рейтинг пользователя');
+      })
+      .finally(() => setLoadingRating(false));
   };
 
   const refreshSelectedUser = async (userId: string) => {
@@ -196,6 +209,17 @@ export const UsersPage: React.FC = () => {
                 <Badge variant="green">Активен</Badge>
               )}
             </DetailRow>
+            
+            <DetailRow label="Кредитный рейтинг">
+              {loadingRating ? (
+                <span className="text-gray-400">Загрузка...</span>
+              ) : rating ? (
+                <span className="font-bold">{rating.rating} ед.</span>
+              ) : (
+                <span className="text-gray-400">Нет данных</span>
+              )}
+            </DetailRow>
+
             <DetailRow label="Роли">
               {selectedUser.roles?.length > 0 ? (
                 <div className="flex flex-wrap gap-1">

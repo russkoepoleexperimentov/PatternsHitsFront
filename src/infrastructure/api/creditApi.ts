@@ -3,7 +3,7 @@
  * Бизнес-логика отправки запросов и обработки ответов для Credit-сервиса.
  */
 
-import type { Credit, ApproveCreditRequest, RejectCreditRequest } from '@/domain/models/credit';
+import type { Credit, ApproveCreditRequest, RejectCreditRequest, CreditRating } from '@/domain/models/credit';
 import type { Tariff, CreateTariffRequest, UpdateTariffRequest } from '@/domain/models/tariff';
 import { creditHttpClient } from './clients';
 
@@ -11,6 +11,9 @@ export const creditApiService = {
   // --- Tariffs ---
   getTariffs: (): Promise<Tariff[]> =>
     creditHttpClient.get<Tariff[]>('/api/tariffs'),
+
+  getCreditRating: (userId: string): Promise<CreditRating> =>
+    creditHttpClient.get<CreditRating>(`/api/user/${userId}/credit-rating`),
 
   getTariffById: (id: string): Promise<Tariff> =>
     creditHttpClient.get<Tariff>(`/api/tariffs/${id}`),
