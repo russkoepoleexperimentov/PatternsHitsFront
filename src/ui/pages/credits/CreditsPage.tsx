@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/ui/shared/Toast';
 import { creditUseCases } from '@/domain/usecases/creditUseCases';
 import { userUseCases } from '@/domain/usecases/userUseCases';
-import type { Credit, ApproveCreditRequest, RejectCreditRequest, CreditRating } from '@/domain/models/credit';
+import type { Credit, ApproveCreditRequest, RejectCreditRequest, CreditRating, Payment } from '@/domain/models/credit';
 import type { User } from '@/domain/models/user';
 import { PageHeader } from '@/ui/shared/PageHeader';
 import { DataTable, type Column } from '@/ui/shared/DataTable';
@@ -24,6 +24,13 @@ const statusBadge: Record<CreditStatus, { variant: 'orange' | 'green' | 'red' | 
   Closed: { variant: 'gray', label: 'Закрыт' },
 };
 
+const paymentStatusBadge: Record<Payment['status'], { variant: 'orange' | 'green' | 'red' | 'gray'; label: string }> = {
+  Pending: { variant: 'orange', label: 'В ожидании' },
+  Processed: { variant: 'green', label: 'Выполнено' },
+  Failed: { variant: 'red', label: 'Ошибка' },
+  Overdue: { variant: 'red', label: 'Просрочено' },
+};
+
 export const CreditsPage: React.FC = () => {
   const toast = useToast();
 
@@ -36,6 +43,9 @@ export const CreditsPage: React.FC = () => {
 
   const [rating, setRating] = useState<CreditRating | null>(null);
   const [loadingRating, setLoadingRating] = useState(false);
+
+  const [overduePayments, setOverduePayments] = useState<Payment[]>([]);
+  const [loadingOverdue, setLoadingOverdue] = useState(false);
 
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -69,14 +79,26 @@ export const CreditsPage: React.FC = () => {
     setSelectedCredit(credit);
     setDrawerOpen(true);
 
+    setRating(null);
+    setOverduePayments([]);
+
     setLoadingRating(true);
     creditUseCases.getUserRating(credit.userId)
       .then(setRating)
-      .catch(() => { 
+      .catch(() => {
         setRating(null);
         toast.error('Не удалось загрузить кредитный рейтинг пользователя');
       })
       .finally(() => setLoadingRating(false));
+
+    setLoadingOverdue(true);
+    creditUseCases.getOverduePayments(credit.id)
+      .then(setOverduePayments)
+      .catch(() => {
+        setOverduePayments([]);
+        toast.error('Не удалось загрузить просроченные платежи');
+      })
+      .finally(() => setLoadingOverdue(false));
   };
 
   const handleApprove = async (e: React.FormEvent) => {
@@ -146,11 +168,11 @@ export const CreditsPage: React.FC = () => {
         );
       },
     },
-    { key: 'amount', title: 'Сумма', render: (r) => `${r.amount.toLocaleString()} ₽` },
+    { key: 'amount', title: 'Сумма', render: (r) => `${r.amount.toLocaleString()} ${r.currency || 'RUB'}` },
     {
       key: 'remainingDebt',
       title: 'Остаток долга',
-      render: (r) => `${r.remainingDebt.toLocaleString()} ₽`,
+      render: (r) => `${r.remainingDebt.toLocaleString()} ${r.currency || 'RUB'}`,
     },
     { key: 'termDays', title: 'Срок', render: (r) => `${r.termDays} дн.` },
     {
@@ -185,6 +207,37 @@ export const CreditsPage: React.FC = () => {
     },
   ];
 
+  const overdueColumns: Column<Payment>[] = [
+    {
+      key: 'id',
+      title: 'ID',
+      render: (p) => <code className="text-xs text-gray-500">{p.id.substring(0, 8)}…</code>,
+    },
+    {
+      key: 'amount',
+      title: 'Сумма',
+      render: (p) => `${p.amount.toLocaleString()} ${p.currency}`,
+    },
+    {
+      key: 'dueDate',
+      title: 'Дата срока',
+      render: (p) => (p.dueDate ? dayjs(p.dueDate).format('DD.MM.YYYY') : '—'),
+    },
+    {
+      key: 'status',
+      title: 'Статус',
+      render: (p) => {
+        const s = paymentStatusBadge[p.status];
+        return <Badge variant={s.variant}>{s.label}</Badge>;
+      },
+    },
+    {
+      key: 'createdAt',
+      title: 'Создан',
+      render: (p) => dayjs(p.createdAt).format('DD.MM.YYYY HH:mm'),
+    },
+  ];
+
   return (
     <div>
       <PageHeader title="Управление кредитами" subtitle="Просмотр, одобрение и отклонение заявок" />
@@ -201,6 +254,8 @@ export const CreditsPage: React.FC = () => {
         onClose={() => {
           setDrawerOpen(false);
           setSelectedCredit(null);
+          setRating(null);
+          setOverduePayments([]);
         }}
         title={`Кредит ${selectedCredit?.id.substring(0, 8) ?? ''}…`}
         width="w-[550px]"
@@ -222,9 +277,25 @@ export const CreditsPage: React.FC = () => {
               )}
             </DetailRow>
 
+            <div className="mt-4 border-t border-gray-200 pt-3">
+              <h3 className="text-sm font-semibold text-gray-700">Просроченные платежи</h3>
+              {loadingOverdue ? (
+                <p className="text-gray-500">Загрузка...</p>
+              ) : overduePayments.length > 0 ? (
+                <DataTable
+                  data={overduePayments}
+                  columns={overdueColumns}
+                  rowKey="id"
+                  pageSize={5}
+                  emptyText="Нет просроченных платежей"
+                />
+              ) : (
+                <p className="text-gray-500">Просроченных платежей нет</p>
+              )}
+            </div>
 
-            <DetailRow label="Сумма">{selectedCredit.amount} ₽</DetailRow>
-            <DetailRow label="Остаток долга">{selectedCredit.remainingDebt} ₽</DetailRow>
+            <DetailRow label="Сумма">{selectedCredit.amount}  {selectedCredit.currency || 'RUB'}</DetailRow>
+            <DetailRow label="Остаток долга">{selectedCredit.remainingDebt} {selectedCredit.currency || 'RUB'}</DetailRow>
             <DetailRow label="Срок">{selectedCredit.termDays} дн.</DetailRow>
             <DetailRow label="Статус">
               <Badge variant={statusBadge[selectedCredit.status].variant}>
@@ -235,7 +306,7 @@ export const CreditsPage: React.FC = () => {
               {dayjs(selectedCredit.createdAt).format('DD.MM.YYYY HH:mm')}
             </DetailRow>
             {selectedCredit.approvedAmount != null && (
-              <DetailRow label="Одобренная сумма">{selectedCredit.approvedAmount} ₽</DetailRow>
+              <DetailRow label="Одобренная сумма">{selectedCredit.approvedAmount} {selectedCredit.currency || 'RUB'}</DetailRow>
             )}
             {selectedCredit.approvedBy && (
               <DetailRow label="Кем одобрен">{selectedCredit.approvedBy}</DetailRow>

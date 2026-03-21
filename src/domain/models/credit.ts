@@ -9,6 +9,7 @@ export interface Credit {
   approvedAmount?: number;
   approvedBy?: string;
   rejectionReason?: string;
+  currency: string;
 }
 
 export interface CreditRating {
@@ -25,4 +26,20 @@ export interface ApproveCreditRequest {
 
 export interface RejectCreditRequest {
   reason: string;
+}
+
+export type PaymentStatus = 'Pending' | 'Processed' | 'Failed' | 'Overdue';
+
+export interface Payment {
+  id: string;
+  creditId: string;
+  amount: number;
+  status: PaymentStatus;
+  createdAt: string;
+  processedAt?: string;
+  originalAmount?: number;
+  originalCurrency?: string;
+  exchangeRate?: number;
+  dueDate?: string;
+  currency: string;
 }
