@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/ui/context/AuthContext';
+import { ThemeProvider } from '@/ui/context/ThemeContext';
 import { ToastProvider } from '@/ui/shared/Toast';
 import { AppLayout } from '@/ui/layout/AppLayout';
 import { PrivateRoute } from '@/ui/routing/PrivateRoute';
@@ -81,16 +82,18 @@ function GlobalErrorHandlers() {
 export default function App() {
   return (
     <AuthProvider>
-      <ToastProvider>
-        <BrowserRouter>
-          <GlobalErrorHandlers />
-          <AppLayout>
-            <ErrorBoundary fallback={<ErrorPage />}>
-              <AppRoutes />
-            </ErrorBoundary>
-          </AppLayout>
-        </BrowserRouter>
-      </ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <GlobalErrorHandlers />
+            <AppLayout>
+              <ErrorBoundary fallback={<ErrorPage />}>
+                <AppRoutes />
+              </ErrorBoundary>
+            </AppLayout>
+          </BrowserRouter>
+        </ToastProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

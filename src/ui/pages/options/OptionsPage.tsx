@@ -5,11 +5,13 @@ import { Button } from '@/ui/shared/Button';
 import { FormField } from '@/ui/shared/FormField';
 import { Spinner } from '@/ui/shared/Spinner';
 import { useToast } from '@/ui/shared/Toast';
+import { useTheme } from '@/ui/context/ThemeContext';
 import { optionsUseCases } from '@/domain/usecases/optionsUseCases';
 import type { OptionsDto } from '@/domain/models/options';
 
 export const OptionsPage: React.FC = () => {
   const toast = useToast();
+  const { refreshOptions } = useTheme();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [options, setOptions] = useState<OptionsDto>({
@@ -40,6 +42,7 @@ export const OptionsPage: React.FC = () => {
     try {
       const updatedOptions = await optionsUseCases.updateOptions(options);
       setOptions(updatedOptions);
+      await refreshOptions(); // Обновить тему в контексте
       toast.success('Настройки сохранены');
     } catch (error) {
       console.error('Ошибка при сохранении настроек', error);
@@ -69,8 +72,8 @@ export const OptionsPage: React.FC = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
                 <option value="">По умолчанию</option>
-                <option value="light">Светлая</option>
-                <option value="dark">Темная</option>
+                <option value="Light">Светлая</option>
+                <option value="Dark">Темная</option>
               </select>
             </FormField>
           </div>
