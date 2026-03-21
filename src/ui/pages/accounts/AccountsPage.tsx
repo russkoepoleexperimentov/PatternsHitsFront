@@ -15,6 +15,7 @@ import { DepositWithdrawModal } from './DepositWithdrawModal';
 import { getTransactionColumns } from './transactionColumns';
 import { Trash2, BookOpen, Plus, Minus, UserCircle } from 'lucide-react';
 import dayjs from 'dayjs';
+import { useTransactionsWebSocket } from '@/infrastructure/api/useTransactionsWebSocket';
 
 export const AccountsPage: React.FC = () => {
   const toast = useToast();
@@ -31,6 +32,26 @@ export const AccountsPage: React.FC = () => {
   const [confirmClose, setConfirmClose] = useState<string | null>(null);
   const [closeLoading, setCloseLoading] = useState(false);
 
+  const handleWebSocketTransaction = useCallback((transaction: Transaction) => {
+    console.log('Получена транзакция через WebSocket:', transaction, selectedAccount);
+    if (!selectedAccount) return;
+    if (transaction.sourceId === selectedAccount.id || 
+      transaction.targetId === selectedAccount.id) {
+      setTransactions((prev) => [transaction, ...prev]);
+      toast.info(`Новая транзакция: ${transaction.resolutionMessage || 'Без описания'} (${transaction.amount} ₽)`);
+    }
+  }, [selectedAccount, toast]);
+
+  useEffect(() => {
+      toast.info(`Выбрана новая учётная запись: ${selectedAccount?.id.substring(0, 8) ?? 'нет'}…`);
+    }, [selectedAccount]);
+
+  useTransactionsWebSocket(() => {
+    toast.info('WebSocket подключён');
+  }, handleWebSocketTransaction, (error) => {
+    toast.error('Ошибка WebSocket: ' + error);
+  });
+  
   const [modalState, setModalState] = useState<{
     open: boolean;
     type: 'deposit' | 'withdraw';

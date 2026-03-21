@@ -18,6 +18,22 @@ export interface Transaction {
   displayType: TransactionDisplayType;
   status: TransactionStatus;
   createdAt: string;
+resolutionMessage?: string;
+resolvedAt: string | null;
+convertedAmount?: number;
+fromCurrency: string;
+toCurrency: string;
+exchangeRate?: number;
+}
+
+export interface AccountTransaction {
+  id: string;
+  amount: number;
+  currency: string;
+  description?: string;
+  createdAt: string;
+  status: TransactionStatus;
+  resolutionMessage?: string;
 }
 
 export type TransactionDisplayType =
