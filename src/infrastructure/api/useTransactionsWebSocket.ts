@@ -7,7 +7,7 @@ export const useTransactionsWebSocket = (
     onMessage?: (transaction: Transaction) => void,
     onError?: (error: Event) => void
 ) => {
-    const url = `ws://localhost:2281/wstransactions`;
+    const url = `ws://37.21.130.4:5001/wstransactions`;
     const { user } = useAuth();
 
     const onOpenRef = useRef(onOpen);

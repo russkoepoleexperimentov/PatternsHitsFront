@@ -5,6 +5,8 @@ export interface Account {
   closedAt: string | null;
   isDeleted: boolean;
   createdAt: string;
+  updatedAt: string;
+  currency: string;
 }
 
 export interface Transaction {

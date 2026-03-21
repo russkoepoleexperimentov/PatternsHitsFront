@@ -10,6 +10,9 @@ export const coreApiService = {
   getAccounts: (): Promise<Account[]> =>
     coreHttpClient.get<Account[]>('/api/accounts/employee'),
 
+  getMasterAccount: (): Promise<Account> =>
+    coreHttpClient.get<Account>('/api/accounts/master'),
+
   getAccountById: (id: string): Promise<Account> =>
     coreHttpClient.get<Account>(`/api/accounts/employee/${id}`),
 

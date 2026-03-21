@@ -1,10 +1,13 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/ui/context/AuthContext';
 import { ToastProvider } from '@/ui/shared/Toast';
 import { AppLayout } from '@/ui/layout/AppLayout';
 import { PrivateRoute } from '@/ui/routing/PrivateRoute';
 import { PublicRoute } from '@/ui/routing/PublicRoute';
 import { PageSpinner } from '@/ui/shared/Spinner';
+import { ErrorBoundary } from '@/ui/shared/ErrorBoundary';
+import { ErrorPage } from '@/ui/pages/error/ErrorPage';
 
 // Pages
 import { HomePage } from '@/ui/pages/home/HomePage';
@@ -28,19 +31,49 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<PrivateRoute><HomePage /></PrivateRoute>} />
+      <Route element={<ErrorBoundary fallback={<ErrorPage />}><Outlet /></ErrorBoundary>}>
+        <Route path="/" element={<PrivateRoute><HomePage /></PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
+        <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
+        <Route path="/tariffs" element={<PrivateRoute><TariffsPage /></PrivateRoute>} />
+        <Route path="/credits" element={<PrivateRoute><CreditsPage /></PrivateRoute>} />
+      </Route>
+
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-      <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
-      <Route path="/users" element={<PrivateRoute><UsersPage /></PrivateRoute>} />
-      <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
-      <Route path="/tariffs" element={<PrivateRoute><TariffsPage /></PrivateRoute>} />
-      <Route path="/credits" element={<PrivateRoute><CreditsPage /></PrivateRoute>} />
       <Route path="/signin-oidc" element={<PublicRoute><CallbackPage /></PublicRoute>} />
       <Route path="/signout-callback-oidc" element={<LogoutCallbackPage />} />
       <Route path="/forbidden" element={<ForbiddenPage />} />
+      <Route path="/error" element={<ErrorPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
+}
+
+function GlobalErrorHandlers() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error('[GlobalErrorHandlers] window.onerror:', event.error || event.message, event.filename, event.lineno, event.colno);
+      navigate('/error', { replace: true });
+    };
+
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      console.error('[GlobalErrorHandlers] unhandledrejection:', event.reason);
+      navigate('/error', { replace: true });
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, [navigate]);
+
+  return null;
 }
 
 export default function App() {
@@ -48,8 +81,11 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
+          <GlobalErrorHandlers />
           <AppLayout>
-            <AppRoutes />
+            <ErrorBoundary fallback={<ErrorPage />}>
+              <AppRoutes />
+            </ErrorBoundary>
           </AppLayout>
         </BrowserRouter>
       </ToastProvider>

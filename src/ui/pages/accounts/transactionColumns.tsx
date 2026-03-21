@@ -36,15 +36,20 @@ export const getTransactionColumns = (selectedAccountId: string): Column<Transac
       const isIncoming = r.targetId === selectedAccountId;
       return (
         <Badge variant={isIncoming ? 'green' : 'red'}>
-          {isIncoming ? '+' : '-'} {r.amount} ₽
+          {isIncoming ? '+' : '-'} {r.amount}
         </Badge>
       );
     },
   },
   {
-    key: 'description',
+    key: 'Сообщение',
     title: 'Описание',
     render: (r) => r.description || '—',
+  },
+  {
+    key: 'resolutionMessage',
+    title: 'Описание',
+    render: (r) => r.resolutionMessage || '—',
   },
   {
     key: 'status',

@@ -11,6 +11,10 @@ export const accountUseCases = {
     return coreApiService.getAccounts();
   },
 
+  getMasterAccount: async (): Promise<Account> => {
+    return coreApiService.getMasterAccount();
+  },
+
   getAccountById: async (id: string): Promise<Account> => {
     return coreApiService.getAccountById(id);
   },

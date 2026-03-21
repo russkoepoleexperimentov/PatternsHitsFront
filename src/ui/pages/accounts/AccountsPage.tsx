@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/ui/shared/Toast';
+import { ErrorBoundary } from '@/ui/shared/ErrorBoundary';
+import { ErrorPage } from '@/ui/pages/error/ErrorPage';
 import { accountUseCases } from '@/domain/usecases/accountUseCases';
 import { userUseCases } from '@/domain/usecases/userUseCases';
 import type { Account, Transaction } from '@/domain/models/account';
@@ -7,14 +9,13 @@ import type { User } from '@/domain/models/user';
 import { PageHeader } from '@/ui/shared/PageHeader';
 import { DataTable, type Column } from '@/ui/shared/DataTable';
 import { PageSpinner } from '@/ui/shared/Spinner';
-import { Badge } from '@/ui/shared/Badge';
 import { Button } from '@/ui/shared/Button';
 import { Drawer } from '@/ui/shared/Drawer';
 import { ConfirmDialog } from '@/ui/shared/ConfirmDialog';
 import { DepositWithdrawModal } from './DepositWithdrawModal';
 import { getTransactionColumns } from './transactionColumns';
-import { Trash2, BookOpen, Plus, Minus, UserCircle } from 'lucide-react';
-import dayjs from 'dayjs';
+import { getAccountColumns } from './accountColumns';
+import { Plus, Minus } from 'lucide-react';
 import { useTransactionsWebSocket } from '@/infrastructure/api/useTransactionsWebSocket';
 
 export const AccountsPage: React.FC = () => {
@@ -23,6 +24,7 @@ export const AccountsPage: React.FC = () => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(false);
   const [usersMap, setUsersMap] = useState<Record<string, User>>({});
+  const [masterAccount, setMasterAccount] = useState<Account | null>(null);
 
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,8 +62,13 @@ export const AccountsPage: React.FC = () => {
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await accountUseCases.getAllAccounts();
+      const [data, master] = await Promise.all([
+        accountUseCases.getAllAccounts(),
+        accountUseCases.getMasterAccount(),
+      ]);
       setAccounts(data);
+      setMasterAccount(master);
+
       const userIds = data.map((a) => a.userId);
       const map = await userUseCases.loadUsersMap(userIds);
       setUsersMap(map);
@@ -121,83 +128,28 @@ export const AccountsPage: React.FC = () => {
     if (selectedAccount?.id) loadTransactions(selectedAccount.id);
   };
 
-  const getAccountStatus = (record: Account) => {
-    if (!record.closedAt && !record.isDeleted) return { label: 'Активен', variant: 'green' as const };
-    if (record.closedAt)
-      return { label: `Закрыт ${dayjs(record.closedAt).format('DD.MM.YYYY')}`, variant: 'red' as const };
-    return { label: 'Пользователь заблокирован', variant: 'red' as const };
-  };
-
-  const columns: Column<Account>[] = [
-    {
-      key: 'id',
-      title: 'ID счёта',
-      render: (r) => <code className="text-xs text-gray-500">{r.id.substring(0, 8)}…</code>,
-    },
-    {
-      key: 'balance',
-      title: 'Баланс',
-      render: (r) => <Badge variant="green">{r.balance} ₽</Badge>,
-    },
-    {
-      key: 'status',
-      title: 'Статус',
-      render: (r) => {
-        const status = getAccountStatus(r);
-        return <Badge variant={status.variant}>{status.label}</Badge>;
-      },
-    },
-    {
-      key: 'owner',
-      title: 'Владелец',
-      render: (r) => {
-        const owner = usersMap[r.userId];
-        if (!owner) return '—';
-        return (
-          <span className="flex items-center gap-1" title={owner.email}>
-            <UserCircle className="h-4 w-4 text-gray-400" />
-            {owner.credentials || owner.email}
-          </span>
-        );
-      },
-    },
-    {
-      key: 'actions',
-      title: 'Действия',
-      render: (r) => (
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<BookOpen className="h-4 w-4" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleOpenDrawer(r);
-            }}
-          >
-            История
-          </Button>
-          {!r.closedAt && !r.isDeleted && (
-            <Button
-              variant="danger"
-              size="sm"
-              icon={<Trash2 className="h-4 w-4" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                setConfirmClose(r.id);
-              }}
-            >
-              Закрыть
-            </Button>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const columns: Column<Account>[] = getAccountColumns(
+    usersMap,
+    handleOpenDrawer,
+    (id) => setConfirmClose(id)
+  );
 
   return (
-    <div>
-      <PageHeader title="Счета клиентов" subtitle="Управление счетами и транзакциями" />
+    <ErrorBoundary fallback={<ErrorPage title="Ошибка страницы Счета" message="Произошла неожиданная ошибка при загрузке страницы счетов." />}>
+      <div>
+        <PageHeader title="Счета клиентов" subtitle="Управление счетами и транзакциями" />
+
+      <div className="mt-4 mb-6 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-700">Мастер-счёт</h2>
+        {masterAccount ? (
+          <div className="mt-2 text-sm text-gray-800">
+            <div>Баланс: <strong>{masterAccount.balance.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> {masterAccount.currency || 'RUB'}</div>
+            <div className="text-xs text-gray-500">ID: {masterAccount.id.substring(0, 8)}…</div>
+          </div>
+        ) : (
+          <div className="mt-2 text-sm text-gray-500">Загрузка данных мастер-счёта...</div>
+        )}
+      </div>
 
       {loading ? (
         <PageSpinner />
@@ -266,5 +218,6 @@ export const AccountsPage: React.FC = () => {
         onSuccess={invalidate}
       />
     </div>
+    </ErrorBoundary>
   );
 };

@@ -15,7 +15,7 @@ export const Drawer: React.FC<DrawerProps> = ({
   onClose,
   title,
   children,
-  width = 'w-[700px]',
+  width = 'w-[900px]',
   extra,
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
