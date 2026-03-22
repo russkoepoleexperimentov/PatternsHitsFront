@@ -4,6 +4,7 @@ export interface Tariff {
   interestRate: number;
   maxAmount: number;
   maxTermDays: number;
+  currency: string;
 }
 
 export interface CreateTariffRequest {
@@ -11,6 +12,7 @@ export interface CreateTariffRequest {
   interestRate: number;
   maxAmount: number;
   maxTermDays: number;
+  currency: string;
 }
 
 export type UpdateTariffRequest = CreateTariffRequest;

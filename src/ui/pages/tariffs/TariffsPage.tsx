@@ -8,7 +8,7 @@ import { PageSpinner } from '@/ui/shared/Spinner';
 import { Button } from '@/ui/shared/Button';
 import { Modal } from '@/ui/shared/Modal';
 import { ConfirmDialog } from '@/ui/shared/ConfirmDialog';
-import { FormField, Input } from '@/ui/shared/FormField';
+import { FormField, Input, Select } from '@/ui/shared/FormField';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 
 interface TariffFormData {
@@ -16,6 +16,7 @@ interface TariffFormData {
   interestRate: string;
   maxAmount: string;
   maxTermDays: string;
+  currency: string;
 }
 
 const emptyForm: TariffFormData = {
@@ -23,6 +24,7 @@ const emptyForm: TariffFormData = {
   interestRate: '',
   maxAmount: '',
   maxTermDays: '',
+  currency: 'RUB',
 };
 
 export const TariffsPage: React.FC = () => {
@@ -70,6 +72,7 @@ export const TariffsPage: React.FC = () => {
       interestRate: String(tariff.interestRate),
       maxAmount: String(tariff.maxAmount),
       maxTermDays: String(tariff.maxTermDays),
+      currency: tariff.currency,
     });
     setErrors({});
     setModalOpen(true);
@@ -98,6 +101,8 @@ export const TariffsPage: React.FC = () => {
         interestRate: parseFloat(form.interestRate),
         maxAmount: parseFloat(form.maxAmount),
         maxTermDays: parseInt(form.maxTermDays, 10),
+        currency: form.currency,
+
       };
       if (editingTariff) {
         await tariffUseCases.updateTariff(editingTariff.id, data);
@@ -132,6 +137,7 @@ export const TariffsPage: React.FC = () => {
 
   const columns: Column<Tariff>[] = [
     { key: 'name', title: 'Название', render: (r) => r.name },
+    { key: 'currency', title: 'Валюта', render: (r) => r.currency },
     { key: 'interestRate', title: 'Ставка %', render: (r) => `${r.interestRate} %` },
     {
       key: 'maxAmount',
@@ -237,6 +243,17 @@ export const TariffsPage: React.FC = () => {
               placeholder="Срок в днях"
               hasError={!!errors.maxTermDays}
             />
+          </FormField>
+          <FormField label="Валюта" required error={errors.currency}>
+            <Select
+              value={form.currency}
+              onChange={(e) => updateField('currency', e.target.value)}
+              hasError={!!errors.currency}
+            >
+              <option value="RUB">Российский рубль (RUB)</option>
+              <option value="PLN">Польский злотый (PLN)</option>
+              <option value="ILS">Израильский шекель (ILS)</option>
+            </Select>
           </FormField>
           <div className="flex justify-end gap-3 mt-2">
             <Button variant="secondary" type="button" onClick={() => setModalOpen(false)}>
