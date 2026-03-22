@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 
 import { PageHeader } from '@/ui/shared/PageHeader';
 import { Button } from '@/ui/shared/Button';
-import { FormField } from '@/ui/shared/FormField';
+import { FormField, Select } from '@/ui/shared/FormField';
 import { Spinner } from '@/ui/shared/Spinner';
 import { useToast } from '@/ui/shared/Toast';
 import { useTheme } from '@/ui/context/ThemeContext';
@@ -66,15 +66,14 @@ export const OptionsPage: React.FC = () => {
 
           <div className="space-y-4">
             <FormField label="Веб-тема">
-              <select
+              <Select
                 value={options.webTheme || ''}
                 onChange={(e) => setOptions({ ...options, webTheme: e.target.value == "Dark" ? "Dark" : "Light" })}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
               >
                 <option value="">По умолчанию</option>
                 <option value="Light">Светлая</option>
                 <option value="Dark">Темная</option>
-              </select>
+              </Select>
             </FormField>
           </div>
         </div>
