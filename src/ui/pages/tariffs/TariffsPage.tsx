@@ -142,7 +142,7 @@ export const TariffsPage: React.FC = () => {
     {
       key: 'maxAmount',
       title: 'Макс. сумма',
-      render: (r) => `${r.maxAmount.toLocaleString()} ₽`,
+      render: (r) => `${r.maxAmount.toLocaleString()} ${r.currency}`,
     },
     { key: 'maxTermDays', title: 'Срок (дней)', render: (r) => `${r.maxTermDays} дн.` },
     {
