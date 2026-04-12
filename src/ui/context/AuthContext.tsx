@@ -1,6 +1,8 @@
 import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { authService } from '@/infrastructure/auth/authService';
 import { setApiTokenProvider } from '@/infrastructure/api';
+import { pushService } from '@/infrastructure/push/pushService';
+import { coreApiService } from '@/infrastructure/api/coreApi';
 import type { AuthUser } from '@/domain/models/user';
 
 interface AuthContextValue {
@@ -22,6 +24,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const currentUser = await authService.getUser();
       setUser(currentUser);
+      if (currentUser) {
+        pushService.requestPermissionAndGetToken().then(token => {
+          if (token) coreApiService.registerPushDevice(token);
+        });
+      }
     } catch (error) {
       console.error('Auth refresh error', error);
       setUser(null);

@@ -9,6 +9,7 @@ import { PublicRoute } from '@/ui/routing/PublicRoute';
 import { PageSpinner } from '@/ui/shared/Spinner';
 import { ErrorBoundary } from '@/ui/shared/ErrorBoundary';
 import { ErrorPage } from '@/ui/pages/error/ErrorPage';
+import { PushNotificationInitializer } from '@/ui/components/PushNotificationInitializer';
 
 // Pages
 import { HomePage } from '@/ui/pages/home/HomePage';
@@ -86,6 +87,7 @@ export default function App() {
         <ToastProvider>
           <BrowserRouter>
             <GlobalErrorHandlers />
+            <PushNotificationInitializer />
             <AppLayout>
               <ErrorBoundary fallback={<ErrorPage />}>
                 <AppRoutes />

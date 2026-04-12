@@ -10,4 +10,5 @@ export const config = {
   coreApiUrl: 'http://37.21.130.4:5001',
   creditApiUrl: 'http://37.21.130.4:5002',
   optionsApiUrl: 'http://37.21.130.4:5004',
+  monitoringApiUrl: 'http://37.21.130.4:5005', 
 } as const;

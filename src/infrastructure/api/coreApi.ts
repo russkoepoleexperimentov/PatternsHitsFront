@@ -7,6 +7,13 @@ import type { Account, Transaction, CreateTransactionRequest } from '@/domain/mo
 import { coreHttpClient } from './clients';
 
 export const coreApiService = {
+  registerPushDevice: (fcmToken: string): Promise<void> =>
+    coreHttpClient.request<void>('/api/push/device', {
+      method: 'POST',
+      params: { fcmToken, deviceType: 'Employee' },
+    }).then(() => undefined),
+
+
   getAccounts: (): Promise<Account[]> =>
     coreHttpClient.get<Account[]>('/api/accounts/employee'),
 
