@@ -6,10 +6,10 @@
 import { HttpClient } from '@/infrastructure/network';
 import { config } from '@/config';
 
-export const authHttpClient    = new HttpClient(config.authApiUrl,    'auth');
-export const coreHttpClient    = new HttpClient(config.coreApiUrl,    'core');
-export const creditHttpClient  = new HttpClient(config.creditApiUrl,  'credit');
-export const optionsHttpClient = new HttpClient(config.optionsApiUrl, 'options');
+export const authHttpClient    = new HttpClient(config.authApiUrl,    'AuthService');
+export const coreHttpClient    = new HttpClient(config.coreApiUrl,    'CoreService');
+export const creditHttpClient  = new HttpClient(config.creditApiUrl,  'CreditService');
+export const optionsHttpClient = new HttpClient(config.optionsApiUrl, 'OptionsService');
 
 /**
  * Устанавливает провайдер токена для всех клиентов.
